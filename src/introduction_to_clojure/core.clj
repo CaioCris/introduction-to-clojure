@@ -145,10 +145,6 @@
   (bake-pan 30)
   (cool-pan))
 
-(defn -main []
-  (bake-cake)
-  (bake-cookies))
-
 (def pantry-ingredients #{:flour :sugar})
 
 (defn from-pantry? [ingredient]
@@ -159,4 +155,72 @@
 (defn from-fridge? [ingredient]
   (contains? fridge-ingredients ingredient))
 
-(defn fetch-from-pantry)
+(defn fetch-from-pantry
+  ([ingredient]
+   (fetch-from-pantry ingredient 1))
+  ([ingredient amount]
+   (if (from-pantry? ingredient)
+     (do
+       (go-to :pantry)
+       (dotimes [_ amount]
+         (load-up ingredient))
+       (go-to :prep-area)
+       (dotimes [_ amount]
+         (unload ingredient)))
+     (error "This function only works on ingredients that are stored in the pantry. You asked me to fetch" ingredient))))
+
+(defn fetch-from-fridge
+  ([ingredient]
+   (fetch-from-fridge ingredient 1))
+  ([ingredient amount]
+   (if (from-fridge? ingredient)
+     (do
+       (go-to :fridge)
+       (dotimes [_ amount]
+         (load-up ingredient))
+       (go-to :prep-area)
+       (dotimes [_ amount]
+         (unload ingredient)))
+     (error "This function only works on ingredients that are stored in the fridge. You asked me to fetch" ingredient))))
+
+(defn fetch-ingredient
+  ([ingredient]
+   (fetch-ingredient ingredient 1))
+  ([ingredient amount]
+   (cond
+     (from-pantry? ingredient)
+     (fetch-from-pantry ingredient amount)
+     (from-fridge? ingredient)
+     (fetch-from-fridge ingredient amount)
+     :else
+     (error "I don't know where to get" ingredient))))
+
+(defn load-up-amount [ingredient amount]
+  (dotimes [_ amount]
+    (load-up ingredient)))
+
+(defn unload-amount [ingredient amount]
+  (dotimes [_ amount]
+    (unload ingredient)))
+
+(def locations {:pantry pantry-ingredients
+                :fridge fridge-ingredients})
+
+(defn fetch-list [shopping]
+  (doseq [location (key location)]
+    (go-to location)
+    (doseq [ingredient (get locations location)]
+      (load-up-amount ingredient (get shopping ingredient 0))))
+  (go-to :prep-area)
+  (doseq [location (key location)]
+    (go-to location)
+    (doseq [ingredient (get locations location)]
+      (unload-amount ingredient (get shopping ingredient 0)))))
+
+
+
+(defn -main []
+  (start-over)
+  (fetch-ingredient :sugar 56)
+  (fetch-ingredient :flour 23)
+  (status))
