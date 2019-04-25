@@ -1,6 +1,10 @@
 (ns introduction-to-clojure.core
   (:require [bakery.core :refer :all]))
 
+(defn error [& msgs]
+  (apply println msgs)
+  :error)
+
 (defn add-egg []
   (grab :egg)
   (squeeze)
@@ -28,45 +32,43 @@
   (grab :butter)
   (add-to-bowl))
 
+(def scooped-ingredients #{:milk :flour :sugar})
+
 (defn scooped? [ingredient]
-  (cond
-    (= ingredient :milk)
-    true
-    (= ingredient :flour)
-    true
-    (= ingredient :sugar)
-    true
-    :else
-    false))
+  (contains? scooped-ingredients ingredient))
+
+(def squeezed-ingredients #{:egg})
 
 (defn squeezed? [ingredient]
-  (= ingredient :egg))
+  (contains? squeezed-ingredients ingredient))
+
+(def simple-ingredients #{:butter})
 
 (defn simple? [ingredient]
-  (= ingredient :butter))
+  (contains? simple-ingredients ingredient))
 
 (defn add-eggs [n]
-  (dotimes [e n]
+  (dotimes [_ n]
     (add-egg))
   :ok)
 
 (defn add-flour-cups [n]
-  (dotimes [e n]
+  (dotimes [_ n]
     (add-flour))
   :ok)
 
 (defn add-milk-cups [n]
-  (dotimes [e n]
+  (dotimes [_ n]
     (add-milk))
   :ok)
 
 (defn add-sugar-cups [n]
-  (dotimes [e n]
+  (dotimes [_ n]
     (add-sugar))
   :ok)
 
 (defn add-butters [n]
-  (dotimes [e n]
+  (dotimes [_ n]
     (add-butter))
   :ok)
 
@@ -74,14 +76,12 @@
   ([ingredient amount]
    (if (squeezed? ingredient)
      (do
-       (dotimes [i amount]
+       (dotimes [_ amount]
          (grab ingredient)
          (squeeze)
          (add-to-bowl))
        :ok)
-     (do
-       (println "This function only works on squeezed ingredients. You asked me to squeeze" ingredient)
-       :error)))
+     (error "This function only works on squeezed ingredients. You asked me to squeeze" ingredient)))
   ([ingredient]
    (add-squeezed ingredient 1)))
 
@@ -89,15 +89,13 @@
   ([ingredient amount]
    (if (scooped? ingredient)
      (do
-       (dotimes [i amount]
+       (dotimes [_ amount]
          (grab :cup)
          (scoop ingredient)
          (add-to-bowl)
          (release))
        :ok)
-     (do
-       (println "This function only works on scooped ingredients. You asked me to scoop" ingredient)
-       :error)))
+     (error "This function only works on scooped ingredients. You asked me to scoop" ingredient)))
   ([ingredient]
    (add-scooped ingredient 1)))
 
@@ -105,13 +103,11 @@
   ([ingredient amount]
    (if (simple? ingredient)
      (do
-       (dotimes [i amount]
+       (dotimes [_ amount]
          (grab ingredient)
          (add-to-bowl))
        :ok)
-     (do
-       (println "This function only works on simple ingredients. You asked me to add" ingredient)
-       :error)))
+     (error "This function only works on simple ingredients. You asked me to add" ingredient)))
   ([ingredient]
    (add-simple ingredient 1)))
 
@@ -127,9 +123,7 @@
      (simple? ingredient)
      (add-simple ingredient amount)
      :else
-     (do
-       (println "I do not know the ingredient" ingredient)
-       :error))))
+     (error "I do not know the ingredient" ingredient))))
 
 (defn bake-cake []
   (add :egg 2)
@@ -152,4 +146,17 @@
   (cool-pan))
 
 (defn -main []
-  (println "Hello, World!"))
+  (bake-cake)
+  (bake-cookies))
+
+(def pantry-ingredients #{:flour :sugar})
+
+(defn from-pantry? [ingredient]
+  (contains? pantry-ingredients ingredient))
+
+(def fridge-ingredients #{:milk :egg :butter})
+
+(defn from-fridge? [ingredient]
+  (contains? fridge-ingredients ingredient))
+
+(defn fetch-from-pantry)
