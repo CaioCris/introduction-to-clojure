@@ -207,20 +207,36 @@
                 :fridge fridge-ingredients})
 
 (defn fetch-list [shopping]
-  (doseq [location (key location)]
+  (doseq [location (keys locations)]
     (go-to location)
     (doseq [ingredient (get locations location)]
       (load-up-amount ingredient (get shopping ingredient 0))))
   (go-to :prep-area)
-  (doseq [location (key location)]
+  (doseq [location (keys locations)]
     (go-to location)
     (doseq [ingredient (get locations location)]
       (unload-amount ingredient (get shopping ingredient 0)))))
 
+(def cake-recipe {:egg 2 :flour 2 :milk 1 :sugar 1})
+(def cookies-recipe {:egg 1 :flour 1 :butter 1 :sugar 1})
 
+(defn send-delivery [order rack-id]
+  {:orderid (get order :orderid)
+   :address (get order :address)
+   :rackids [rack-id]})
+
+(defn day-at-the-bakery []
+  (let [orders (get-morning-orders)]
+    (doseq [order orders]
+      (let [items (get order :items)]
+        (dotimes [_ (get items :cake 0)]
+          (fetch-list cake-recipe)
+          (let [rack-id (bake-cake)]
+            (delivery (send-delivery order rack-id))))
+        (dotimes [_ (get items :cookies 0)]
+          (fetch-list cookies-recipe)
+          (let [rack-id (bake-cookies)]
+            (delivery (send-delivery order rack-id))))))))
 
 (defn -main []
-  (start-over)
-  (fetch-ingredient :sugar 56)
-  (fetch-ingredient :flour 23)
-  (status))
+  (day-at-the-bakery))
