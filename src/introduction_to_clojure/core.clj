@@ -213,7 +213,6 @@
       (load-up-amount ingredient (get shopping ingredient 0))))
   (go-to :prep-area)
   (doseq [location (keys locations)]
-    (go-to location)
     (doseq [ingredient (get locations location)]
       (unload-amount ingredient (get shopping ingredient 0)))))
 
