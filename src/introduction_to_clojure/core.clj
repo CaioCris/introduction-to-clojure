@@ -224,18 +224,50 @@
    :address (get order :address)
    :rackids [rack-id]})
 
+;(defn day-at-the-bakery []
+;  (let [orders (get-morning-orders)]
+;    (doseq [order orders]
+;      (let [items (get order :items)]
+;        (dotimes [_ (get items :cake 0)]
+;          (fetch-list cake-recipe)
+;          (let [rack-id (bake-cake)]
+;            (delivery (send-delivery order rack-id))))
+;        (dotimes [_ (get items :cookies 0)]
+;          (fetch-list cookies-recipe)
+;          (let [rack-id (bake-cookies)]
+;            (delivery (send-delivery order rack-id))))))))
+
+(defn add-ingredients [cake-ingredients cookies-ingredients]
+  (merge-with + cake-ingredients cookies-ingredients))
+
+(defn multiply-ingredients [quantity recipe-list]
+  (into {}
+        (for [kv recipe-list]
+          [(first kv) (* quantity (second kv))])))
+
+(defn order->ingredients [order]
+  (let [items (get order :items)
+        cake-igredients (multiply-ingredients (get items :cake 0) cake-recipe)
+        cookies-igredients (multiply-ingredients (get items :cookies 0) cookies-recipe)]
+    (add-ingredients cake-igredients cookies-igredients)))
+
 (defn day-at-the-bakery []
   (let [orders (get-morning-orders)]
     (doseq [order orders]
-      (let [items (get order :items)]
-        (dotimes [_ (get items :cake 0)]
-          (fetch-list cake-recipe)
-          (let [rack-id (bake-cake)]
-            (delivery (send-delivery order rack-id))))
-        (dotimes [_ (get items :cookies 0)]
-          (fetch-list cookies-recipe)
-          (let [rack-id (bake-cookies)]
-            (delivery (send-delivery order rack-id))))))))
+      (order->ingredients order))))
+
+;(defn day-at-the-bakery []
+;  (let [orders (get-morning-orders)]
+;    (doseq [order orders]
+;      (let [items (get order :items)]
+;        (dotimes [_ (get items :cake 0)]
+;          (fetch-list cake-recipe)
+;          (let [rack-id (bake-cake)]
+;            (delivery (send-delivery order rack-id))))
+;        (dotimes [_ (get items :cookies 0)]
+;          (fetch-list cookies-recipe)
+;          (let [rack-id (bake-cookies)]
+;            (delivery (send-delivery order rack-id))))))))
 
 (defn -main []
   (day-at-the-bakery))
