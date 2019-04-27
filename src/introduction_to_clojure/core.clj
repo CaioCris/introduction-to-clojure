@@ -219,23 +219,10 @@
 (def cake-recipe {:egg 2 :flour 2 :milk 1 :sugar 1})
 (def cookies-recipe {:egg 1 :flour 1 :butter 1 :sugar 1})
 
-(defn send-delivery [order rack-id]
+(defn send-delivery [order racks]
   {:orderid (get order :orderid)
    :address (get order :address)
-   :rackids [rack-id]})
-
-;(defn day-at-the-bakery []
-;  (let [orders (get-morning-orders)]
-;    (doseq [order orders]
-;      (let [items (get order :items)]
-;        (dotimes [_ (get items :cake 0)]
-;          (fetch-list cake-recipe)
-;          (let [rack-id (bake-cake)]
-;            (delivery (send-delivery order rack-id))))
-;        (dotimes [_ (get items :cookies 0)]
-;          (fetch-list cookies-recipe)
-;          (let [rack-id (bake-cookies)]
-;            (delivery (send-delivery order rack-id))))))))
+   :rackids racks})
 
 (defn add-ingredients [cake-ingredients cookies-ingredients]
   (merge-with + cake-ingredients cookies-ingredients))
@@ -256,18 +243,29 @@
           (for [order orders]
             (order->ingredients order))))
 
+(defn bake [item]
+  (cond
+    (= item :cake)
+    (bake-cake)
+    (= item :cookies)
+    (bake-cookies)
+    :else
+    (error "I don't know how to bake" item)))
+
 (defn day-at-the-bakery []
   (let [orders (get-morning-orders)
         ingredients (orders->ingredients orders)]
     (fetch-list ingredients)
     (doseq [order orders]
-      (let [items (get order :items)]
-        (dotimes [_ (get items :cake 0)]
-          (let [rack-id (bake-cake)]
-            (delivery (send-delivery order rack-id))))
-        (dotimes [_ (get items :cookies)]
-          (let [rack-id (bake-cookies)]
-            (delivery (send-delivery order rack-id))))))))
+      (println "Cooking the order number:" (get order :orderid))
+      (let [items (get order :items)
+            racks (for [kv items
+                        _ (range (second kv))]
+                    (bake (first kv)))]
+        (delivery (send-delivery order racks))
+        (println "Delivery of number:" (get order :orderid))))))
+
+
 
 (defn -main []
   (day-at-the-bakery))
