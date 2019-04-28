@@ -5,34 +5,7 @@
   (apply println msgs)
   :error)
 
-(defn add-egg []
-  (grab :egg)
-  (squeeze)
-  (add-to-bowl))
-
-(defn add-flour []
-  (grab :cup)
-  (scoop :flour)
-  (add-to-bowl)
-  (release))
-
-(defn add-milk []
-  (grab :cup)
-  (scoop :milk)
-  (add-to-bowl)
-  (release))
-
-(defn add-sugar []
-  (grab :cup)
-  (scoop :sugar)
-  (add-to-bowl)
-  (release))
-
-(defn add-butter []
-  (grab :butter)
-  (add-to-bowl))
-
-(def scooped-ingredients #{:milk :flour :sugar})
+(def scooped-ingredients #{:milk :flour :sugar :cocoa})
 
 (defn scooped? [ingredient]
   (contains? scooped-ingredients ingredient))
@@ -46,31 +19,6 @@
 
 (defn simple? [ingredient]
   (contains? simple-ingredients ingredient))
-
-(defn add-eggs [n]
-  (dotimes [_ n]
-    (add-egg))
-  :ok)
-
-(defn add-flour-cups [n]
-  (dotimes [_ n]
-    (add-flour))
-  :ok)
-
-(defn add-milk-cups [n]
-  (dotimes [_ n]
-    (add-milk))
-  :ok)
-
-(defn add-sugar-cups [n]
-  (dotimes [_ n]
-    (add-sugar))
-  :ok)
-
-(defn add-butters [n]
-  (dotimes [_ n]
-    (add-butter))
-  :ok)
 
 (defn add-squeezed
   ([ingredient amount]
@@ -145,7 +93,7 @@
   (bake-pan 30)
   (cool-pan))
 
-(def pantry-ingredients #{:flour :sugar})
+(def pantry-ingredients #{:flour :sugar :cocoa})
 
 (defn from-pantry? [ingredient]
   (contains? pantry-ingredients ingredient))
