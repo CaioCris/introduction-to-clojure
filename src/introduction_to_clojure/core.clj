@@ -5,47 +5,59 @@
   (apply println msgs)
   :error)
 
-(def baking {:recipes {:cake     {:ingredients {:egg 2 :flour 2 :milk 1 :sugar 1}
-                                  :steps       [[:add :all]
-                                                [:mix]
-                                                [:pour]
-                                                [:bake 25]
-                                                [:cool]]
-                                  }
-                       :cookies  {:ingredients {:egg 1 :flour 1 :butter 1 :sugar 1}
-                                  :steps       [[:add :all]
-                                                [:mix]
-                                                [:pour]
-                                                [:bake 30]
-                                                [:cool]]
-                                  }
-                       :brownies {:ingredients {:butter 2 :sugar 1 :cocoa 2 :flour 2 :egg 2 :milk 1}
-                                  :steps       [[:add :butter]
-                                                [:add :sugar]
-                                                [:add :cocoa]
-                                                [:mix]
-                                                [:add :flour]
-                                                [:add :egg]
-                                                [:add :milk]
-                                                [:mix]
-                                                [:pour]
-                                                [:bake 35]
-                                                [:cool]]}}})
-
-(def scooped-ingredients #{:milk :flour :sugar :cocoa})
+(def baking {:recipes     {:cake     {:ingredients {:egg 2 :flour 2 :milk 1 :sugar 1}
+                                      :steps       [[:add :all]
+                                                    [:mix]
+                                                    [:pour]
+                                                    [:bake 25]
+                                                    [:cool]]
+                                      }
+                           :cookies  {:ingredients {:egg 1 :flour 1 :butter 1 :sugar 1}
+                                      :steps       [[:add :all]
+                                                    [:mix]
+                                                    [:pour]
+                                                    [:bake 30]
+                                                    [:cool]]
+                                      }
+                           :brownies {:ingredients {:butter 2 :sugar 1 :cocoa 2 :flour 2 :egg 2 :milk 1}
+                                      :steps       [[:add :butter]
+                                                    [:add :sugar]
+                                                    [:add :cocoa]
+                                                    [:mix]
+                                                    [:add :flour]
+                                                    [:add :egg]
+                                                    [:add :milk]
+                                                    [:mix]
+                                                    [:pour]
+                                                    [:bake 35]
+                                                    [:cool]]}}
+             :ingredients {:egg    {:storage :fridge
+                                    :usage   :squeezed}
+                           :butter {:storage :fridge
+                                    :usage   :simple}
+                           :milk   {:storage :fridge
+                                    :usage   :scooped}
+                           :flour  {:storage :pantry
+                                    :usage   :scooped}
+                           :cocoa  {:storage :pantry
+                                    :usage   :scooped}
+                           :sugar  {:storage :pantry
+                                    :usage   :scooped}}})
 
 (defn scooped? [ingredient]
-  (contains? scooped-ingredients ingredient))
-
-(def squeezed-ingredients #{:egg})
+  (let [ingredients (get baking :ingredients)
+        ingredient-info (get ingredients ingredient)]
+    (= :scooped ingredient-info)))
 
 (defn squeezed? [ingredient]
-  (contains? squeezed-ingredients ingredient))
-
-(def simple-ingredients #{:butter})
+  (let [ingredients (get baking :ingredients)
+        ingredient-info (get ingredients ingredient)]
+    (= :squeezed ingredient-info)))
 
 (defn simple? [ingredient]
-  (contains? simple-ingredients ingredient))
+  (let [ingredients (get baking :ingredients)
+        ingredient-info (get ingredients ingredient)]
+    (= :simple ingredient-info)))
 
 (defn add-squeezed
   ([ingredient amount]
@@ -170,18 +182,6 @@
          (unload ingredient)))
      (error "This function only works on ingredients that are stored in the fridge. You asked me to fetch" ingredient))))
 
-(defn fetch-ingredient
-  ([ingredient]
-   (fetch-ingredient ingredient 1))
-  ([ingredient amount]
-   (cond
-     (from-pantry? ingredient)
-     (fetch-from-pantry ingredient amount)
-     (from-fridge? ingredient)
-     (fetch-from-fridge ingredient amount)
-     :else
-     (error "I don't know where to get" ingredient))))
-
 (defn load-up-amount [ingredient amount]
   (dotimes [_ amount]
     (load-up ingredient)))
@@ -189,6 +189,20 @@
 (defn unload-amount [ingredient amount]
   (dotimes [_ amount]
     (unload ingredient)))
+
+(defn fetch-ingredient
+  ([ingredient]
+   (fetch-ingredient ingredient 1))
+  ([ingredient amount]
+   (let [ingredients (get baking :ingredients)
+         ingredient-info (get ingredients ingredient)]
+     (if (contains? ingredients ingredient)
+       (do
+         (go-to (get ingredient-info :storage))
+         (load-up-amount ingredient amount)
+         (go-to :prep-area)
+         (unload-amount ingredient amount))
+       (error "I don't know the ingredient" ingredient)))))
 
 (def locations {:pantry pantry-ingredients
                 :fridge fridge-ingredients})
@@ -210,7 +224,6 @@
 
 (defn add-ingredients [a b]
   (merge-with + a b))
-
 
 (defn multiply-ingredients [quantity recipe-list]
   (into {}
