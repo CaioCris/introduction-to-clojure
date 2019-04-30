@@ -208,8 +208,9 @@
    :address (get order :address)
    :rackids racks})
 
-(defn add-ingredients [cake-ingredients cookies-ingredients brownies-ingredients]
-  (merge-with + cake-ingredients cookies-ingredients brownies-ingredients))
+(defn add-ingredients [a b]
+  (merge-with + a b))
+
 
 (defn multiply-ingredients [quantity recipe-list]
   (into {}
@@ -218,11 +219,12 @@
 
 (defn order->ingredients [order]
   (let [items (get order :items)
-        recipes (get baking :recipes)
-        cake-ingredients (multiply-ingredients (get items :cake 0) (get recipes :cake))
-        cookies-ingredients (multiply-ingredients (get items :cookies 0) (get recipes :cookies))
-        brownies-ingredients (multiply-ingredients (get items :brownies 0) (get recipes :brownies))]
-    (add-ingredients cake-ingredients cookies-ingredients brownies-ingredients)))
+        recipes (get baking :recipes)]
+    (reduce add-ingredients {}
+            (for [kv items]
+              (let [recipe (get recipes (first kv))
+                    ingredients (get recipe :ingredients)]
+                (multiply-ingredients (second kv) ingredients))))))
 
 (defn orders->ingredients [orders]
   (reduce add-ingredients {}
@@ -247,6 +249,7 @@
                     (bake (first kv)))]
         (delivery (send-delivery order racks))
         (println "Delivery of number:" (get order :orderid))))))
+
 
 (defn -main []
   (day-at-the-bakery))
