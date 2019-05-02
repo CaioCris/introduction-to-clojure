@@ -44,73 +44,36 @@
                            :sugar  {:storage :pantry
                                     :usage   :scooped}}})
 
-(defn scooped? [ingredient]
+(def usage {:squeezed (fn [ingredient amount]
+                        (dotimes [_ amount]
+                          (grab ingredient)
+                          (squeeze)
+                          (add-to-bowl)))
+            :simple   (fn [ingredient amount]
+                        (dotimes [_ amount]
+                          (grab ingredient)
+                          (add-to-bowl)))
+            :scooped  (fn [ingredient amount]
+                        (grab :cup)
+                        (dotimes [_ amount]
+                          (scoop ingredient)
+                          (add-to-bowl))
+                        (release))})
+
+(defn usage-type [ingredient]
   (let [ingredients (get baking :ingredients)
-        ingredient-info (get ingredients ingredient)]
-    (= :scooped (get ingredient-info :usage))))
-
-(defn squeezed? [ingredient]
-  (let [ingredients (get baking :ingredients)
-        ingredient-info (get ingredients ingredient)]
-    (= :squeezed (get ingredient-info :usage))))
-
-(defn simple? [ingredient]
-  (let [ingredients (get baking :ingredients)
-        ingredient-info (get ingredients ingredient)]
-    (= :simple (get ingredient-info :usage))))
-
-(defn add-squeezed
-  ([ingredient amount]
-   (if (squeezed? ingredient)
-     (do
-       (dotimes [_ amount]
-         (grab ingredient)
-         (squeeze)
-         (add-to-bowl))
-       :ok)
-     (error "This function only works on squeezed ingredients. You asked me to squeeze" ingredient)))
-  ([ingredient]
-   (add-squeezed ingredient 1)))
-
-(defn add-scooped
-  ([ingredient amount]
-   (if (scooped? ingredient)
-     (do
-       (dotimes [_ amount]
-         (grab :cup)
-         (scoop ingredient)
-         (add-to-bowl)
-         (release))
-       :ok)
-     (error "This function only works on scooped ingredients. You asked me to scoop" ingredient)))
-  ([ingredient]
-   (add-scooped ingredient 1)))
-
-(defn add-simple
-  ([ingredient amount]
-   (if (simple? ingredient)
-     (do
-       (dotimes [_ amount]
-         (grab ingredient)
-         (add-to-bowl))
-       :ok)
-     (error "This function only works on simple ingredients. You asked me to add" ingredient)))
-  ([ingredient]
-   (add-simple ingredient 1)))
+        info (get ingredients ingredient)]
+    (get info :usage)))
 
 (defn add
   ([ingredient]
    (add ingredient 1))
   ([ingredient amount]
-   (cond
-     (squeezed? ingredient)
-     (add-squeezed ingredient amount)
-     (scooped? ingredient)
-     (add-scooped ingredient amount)
-     (simple? ingredient)
-     (add-simple ingredient amount)
-     :else
-     (error "I do not know the ingredient" ingredient))))
+   (let [ingredient-type (usage-type ingredient)]
+     (if (contains? usage ingredient-type)
+       (let [func (get usage ingredient-type)]
+         (func ingredient amount))
+       (error "I do not know the ingredient" ingredient)))))
 
 (defn perform [ingredients step]
   (cond
@@ -204,14 +167,15 @@
          (unload-amount ingredient amount))
        (error "I don't know the ingredient" ingredient)))))
 
-(defn storage-location [item-amount]
-  (let [item (first item-amount)
-        ingredients (get baking :ingredients)
+(defn storage-location [item]
+  (let [ingredients (get baking :ingredients)
         info (get ingredients item)]
     (get info :storage)))
 
 (defn fetch-list [shopping]
-  (let [locations (group-by storage-location shopping)]
+  (let [locations (group-by (fn [item-amount]
+                              (storage-location (first item-amount)))
+                            shopping)]
     (doseq [location (keys locations)]
       (go-to location)
       (doseq [item-amout (get locations location)]
