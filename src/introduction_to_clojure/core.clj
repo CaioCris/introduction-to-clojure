@@ -144,15 +144,15 @@
       (for [step (get recipe :steps)]
         (perform ingredients step)))))
 
-(def pantry-ingredients #{:flour :sugar :cocoa})
-
 (defn from-pantry? [ingredient]
-  (contains? pantry-ingredients ingredient))
-
-(def fridge-ingredients #{:milk :egg :butter})
+  (let [ingredients (get baking :ingredients)
+        ingredient-info (get ingredients ingredient)]
+    (= :pantry (get ingredient-info :storage))))
 
 (defn from-fridge? [ingredient]
-  (contains? fridge-ingredients ingredient))
+  (let [ingredients (get baking :ingredients)
+        ingredient-info (get ingredients ingredient)]
+    (= :fridge (get ingredient-info :storage))))
 
 (defn fetch-from-pantry
   ([ingredient]
@@ -204,18 +204,22 @@
          (unload-amount ingredient amount))
        (error "I don't know the ingredient" ingredient)))))
 
-(def locations {:pantry pantry-ingredients
-                :fridge fridge-ingredients})
+(defn storage-location [item-amount]
+  (let [item (first item-amount)
+        ingredients (get baking :ingredients)
+        info (get ingredients item)]
+    (get info :storage)))
 
 (defn fetch-list [shopping]
-  (doseq [location (keys locations)]
-    (go-to location)
-    (doseq [ingredient (get locations location)]
-      (load-up-amount ingredient (get shopping ingredient 0))))
-  (go-to :prep-area)
-  (doseq [location (keys locations)]
-    (doseq [ingredient (get locations location)]
-      (unload-amount ingredient (get shopping ingredient 0)))))
+  (let [locations (group-by storage-location shopping)]
+    (doseq [location (keys locations)]
+      (go-to location)
+      (doseq [item-amout (get locations location)]
+        (load-up-amount (first item-amout) (second item-amout))))
+    (go-to :prep-area)
+    (doseq [location (keys locations)]
+      (doseq [item-amout (get locations location)]
+        (unload-amount (first item-amout) (second item-amout))))))
 
 (defn send-delivery [order racks]
   {:orderid (get order :orderid)
