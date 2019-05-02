@@ -47,17 +47,17 @@
 (defn scooped? [ingredient]
   (let [ingredients (get baking :ingredients)
         ingredient-info (get ingredients ingredient)]
-    (= :scooped ingredient-info)))
+    (= :scooped (get ingredient-info :usage))))
 
 (defn squeezed? [ingredient]
   (let [ingredients (get baking :ingredients)
         ingredient-info (get ingredients ingredient)]
-    (= :squeezed ingredient-info)))
+    (= :squeezed (get ingredient-info :usage))))
 
 (defn simple? [ingredient]
   (let [ingredients (get baking :ingredients)
         ingredient-info (get ingredients ingredient)]
-    (= :simple ingredient-info)))
+    (= :simple (get ingredient-info :usage))))
 
 (defn add-squeezed
   ([ingredient amount]
